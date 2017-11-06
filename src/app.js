@@ -45,9 +45,9 @@ app.set('port', (process.env.PORT || 5000));
 // // app.set('view engine', 'ejs');
 
 app.get('/', function(req, res) {
-  res.writeHead(200, {'Content-Type': 'text/html'}); 
+  res.writeHead(403, {'Content-Type': 'text/html'}); 
 
-  res.write('Go AWay');
+  res.write('Go Away');
   res.end();
 });
 
@@ -226,8 +226,8 @@ app.get('/create', function(req, res) {
     } );
 
 
-  	var name = 'Free-Giveaways';
-  	var description = 'Only the best #Giveaways and #Contests on Twitter.';
+  	var name = 'Amazon-Giveaways';
+  	var description = 'Win free items from Amazon.';
 
   	//
 	//  Creates a new list for the authenticated user. Note that you can create up to 1000 lists per account.
@@ -265,6 +265,135 @@ app.get('/create', function(req, res) {
 
 
 }); // end get /create
+
+app.get('/amazon', function(req, res) {
+  // Start process
+  
+  res.writeHead(200, {'Content-Type': 'text/html'}); 
+
+  var T = new Twit( {
+      consumer_key: process.env.twitter_consumer_key,
+      consumer_secret: process.env.twitter_consumer_secret,
+      access_token: process.env.twitter_access_token,
+      access_token_secret: process.env.twitter_access_token_secret
+    } );
+
+  	//
+	//  search twitter for all tweets containing the word '#coupon'
+	//
+	T.get('search/tweets', { q: '#amazongiveaway', count: 1, result_type: 'recent' }, function(error, data, response) {
+	  // console.log(data);
+	  // console.log(data.statuses.length);
+	  // console.log(response);
+
+	  if( data != undefined && !error && response.statusCode == 200 && data.statuses.length != 0 && data.statuses[0].retweeted_status == undefined ){
+	  	// res.write(JSON.stringify(data));	
+	  	
+	  	var status = data.statuses[0];
+
+	  	// console.log(status);
+
+	  	console.log(status.text);
+	  	res.write( 'Tweet: ' + status.text );	
+
+
+	  	var id = status.id_str;
+
+	  	// res.write( status.user.id_str );	
+	  	res.write( 'User: ' + status.user.name );	
+	  	// console.log( status.user.screen_name );	
+	  	res.write( 'Screen Name: ' + status.user.screen_name );	
+
+	  	T.post('friendships/create', { user_id: status.user.id_str }, function(error, data, response) {
+
+	  		// console.log(data);
+	  		// console.log(response);
+
+	  		if( data != undefined && !error && response.statusCode == 200 ){
+
+	  			// console.log(response);
+	  			console.log(data.following);
+	  			res.write( 'Following Status: ' + data.following );	
+
+  				// id: 927619976969650176,
+				// id_str: '927619976969650176',
+				// name: 'Amazon-Giveaways',
+				// uri: '/vannsgiveaways/lists/amazon-giveaways',
+
+				// id: 15188045,
+				//  id_str: '15188045',
+				//  name: 'Promo Deals & Offers',
+				//  screen_name: 'vannscoupons',
+
+
+				T.post('lists/members/create', { list_id: '927619976969650176', owner_id: '15188045', user_id: status.user.id_str, screen_name: status.user.screen_name }, function(error, data, response) {
+
+			  		// console.log(data);
+			  		// console.log(response);
+
+			  		if( data != undefined && !error && response.statusCode == 200 ){
+
+			  			// console.log(response);
+			  			console.log( data.member_count );
+			  			res.write( 'Member Count: '+data.member_count );	
+			  			// console.log(data);
+
+			  			T.post('statuses/retweet/:id', { id: id }, function (err, data, response) {
+						  console.log(data);
+						  res.end();
+						})
+
+			  		}
+			  		else if( error )
+			  		{
+						console.log(error);	  			
+			  		}
+
+			  		res.end();	
+
+			  	});
+
+
+
+	  		}
+	  		else if( error )
+	  		{
+				console.log(error);	  			
+	  		}
+
+	  		// res.end();	
+
+	  	});
+	  	
+	  } // end if
+	  else if( data.statuses != undefined && data.statuses.length != 0 && data.statuses[0].retweeted_status != undefined )
+	  {
+
+	  	var status = data.statuses[0]; 
+
+	  	console.log('A ReTweet');
+		// console.log(data.statuses[0]);
+		res.write('A Retweet');
+
+		console.log(status.text);
+	  	res.write( 'Tweet: ' + status.text );	
+		res.end();
+	  }
+	  else if( error )
+	  {
+		console.log(error);	
+		console.log(data);
+		console.log(response.statusCode);
+
+		console.log(response.statusCode);
+		res.end();
+	  }
+	  
+
+	}); // end search/tweets
+
+
+}); // end get /amazon
 
 app.get('/retweet', function(req, res) {
   // Start process
