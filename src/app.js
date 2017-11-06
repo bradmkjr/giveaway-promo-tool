@@ -244,11 +244,20 @@ app.get('/create', function(req, res) {
 
 	  	
 	  } // end if
+	  else if( data != undefined && !error )
+	   {
+			console.log(response.statusCode);
+			res.write(response.statusCode);
+			res.end(); 			
+
+	   }	
 	  else if( error )
 	  {
 		console.log(error);	
 		console.log(data);
 		console.log(response.statusCode);
+		console.log(response.statusCode);
+		res.end();
 	  }
 	  
 
@@ -358,9 +367,17 @@ app.get('/retweet', function(req, res) {
 			  	});
 
 	  		}
+	  		else if( data != undefined && !error )
+	  		{
+	  			console.log(response.statusCode);
+	  			res.write(response.statusCode);
+	  			res.end(); 			
+
+	  		}	
 	  		else if( error )
 	  		{
-				console.log(error);	 
+				console.log(error);	
+				res.write(JSON.stringify(error)); 
 				res.end(); 			
 	  		}
 
@@ -502,7 +519,6 @@ app.get('/giveaway', function(req, res) {
 
 		console.log(status.text);
 	  	res.write( 'Tweet: ' + status.text );	
-
 		res.end();
 	  }
 	  else if( error )
@@ -510,6 +526,9 @@ app.get('/giveaway', function(req, res) {
 		console.log(error);	
 		console.log(data);
 		console.log(response.statusCode);
+
+		console.log(response.statusCode);
+		res.end();
 	  }
 	  
 
